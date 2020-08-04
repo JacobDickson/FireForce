@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-  <node pkg="movement" type="print_distance2.py" name="movement" output="screen">
+  <node pkg="movement" type="movement.py" name="movement" output="screen">
   </node>
 </launch>

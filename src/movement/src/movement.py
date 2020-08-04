@@ -4,7 +4,7 @@
 # 
 #
 import pyrealsense2 as rs
-import numpy as np
+import numpy as math
 import cv2
 
 from array import *
@@ -16,6 +16,8 @@ import jetson.utils
 from localizer_dwm1001.msg      import Tag
 from std_msgs.msg import Bool
 from std_msgs.msg import Bool
+from std_msgs.msg import String
+from geometry_msgs.msg import Vector3
 
 import argparse
 import sys
@@ -140,6 +142,7 @@ def BFS(mat, src: Point, dest: Point):
 	return -1
 #End class
 
+pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
 
 searching = False
 while True:
@@ -171,7 +174,7 @@ while True:
 			for x in range(310,320):
 				#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
 				dist = depth_frame.get_distance(x, y)
-				if dist < 2 && dist >= 1:
+				if dist < 2 & dist >= 1:
 					#Start path finding and send to gotopos with headings and change map grid
 					#to include found objects
 					searching = False
@@ -179,6 +182,8 @@ while True:
 	else:
 		#run the path finding algorithm
 		#then set searching to true then call gotopos
-		BFS(mat,source,dest) 
+		BFS(map1,source,dest) 
+		rospy.loginfo(des_pos)
+		pub.publish(des_pos)
 #pub.publish(line)
 
