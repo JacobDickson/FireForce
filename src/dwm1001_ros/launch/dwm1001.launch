@@ -1,0 +1,15 @@
+<launch>
+
+    <!--Exctract info from dwm1001 dev boards, filter them and publish them into topics-->
+    <node pkg="localizer_dwm1001" type="dwm1001_main.py" name="localizer_dwm1001_1" output="screen">
+
+        <param name="serial_port_name"      value="/dev/ttyACM1" /> <!-- Name of serial port -->
+        <param name="serial_baud_rate"      value="115200" />  <!--Baudrate of serial port-->
+
+    </node>
+
+    <!-- Display topics of anchors and tag into markers so we can view them into Rviz-->
+    <node pkg="localizer_dwm1001" type="dwm1001_displayMap.py" name="display_dwm1001_1" />
+    <!-- Run rviz with the saved rviz file-->
+
+</launch>
