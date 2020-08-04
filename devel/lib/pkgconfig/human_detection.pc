@@ -1,0 +1,8 @@
+prefix=/home/fire/catkin_ws/devel
+
+Name: human_detection
+Description: Description of human_detection
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,8 @@
+prefix=/home/fire/catkin_ws/install
+
+Name: object_avoidance
+Description: Description of object_avoidance
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
