@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # 
 # This was modified by Jacob Dickson, Ba Bui
-# 
+# Test change 2020
 #
 import pyrealsense2 as rs
 import numpy as math
@@ -178,6 +178,7 @@ while True:
 					#Start path finding and send to gotopos with headings and change map grid
 					#to include found objects
 					searching = False
+					print(dist)
 					print(dist)
 	else:
 		#run the path finding algorithm
