@@ -28,7 +28,7 @@ ROW = 11
 COL = 11
 path = deque()
 visit = [[None for i in range(COL)] for j in range(ROW)]
-path_map = [[0 for i in range(COL)] for j in range(ROW)]
+#path_map = [[0 for i in range(COL)] for j in range(ROW)]
 map1 = [[1 for i in range(COL)] for j in range(ROW)]
 
 
@@ -78,7 +78,8 @@ colNum = [0, -1, 1, 0]
   
 # Function to find the shortest path between  
 # a given source cell to a destination cell.  
-def BFS(mat, src: Point, dest: Point): 
+def BFS(mat, src: Point, dest: Point):
+	print("test1") 
       
 	# check source and destination cell  
 	# of the matrix have value 1  
@@ -126,39 +127,38 @@ def BFS(mat, src: Point, dest: Point):
 					if (isValid(row,col) and mat[row][col] == 1 and visit[row][col] != None):
 						if (visit[row][col].dist < minimum.dist):
 							minimum = visit[row][col]
-                
+				print("test")
 				path.append(minimum)
 				pt = minimum.pt
                         
 			return curr.dist 
           
-	# Otherwise enqueue its adjacent cells  
-	for i in range(4): 
-		row = pt.x + rowNum[i] 
-		col = pt.y + colNum[i] 
-              
-		# if adjacent cell is valid, has path   
-		# and not visited yet, enqueue it. 
-		if (isValid(row,col) and mat[row][col] == 1 and not visited[row][col]): 
-			visited[row][col] = True
-			Adjcell = queueNode(Point(row,col),curr.dist+1)
-			path.append(Adjcell)
-			q.append(Adjcell) 
+		# Otherwise enqueue its adjacent cells  
+		for i in range(4): 
+			row = pt.x + rowNum[i] 
+			col = pt.y + colNum[i] 
+		      
+			# if adjacent cell is valid, has path   
+			# and not visited yet, enqueue it. 
+			if (isValid(row,col) and mat[row][col] == 1 and not visited[row][col]): 
+				visited[row][col] = True
+				Adjcell = queueNode(Point(row,col),curr.dist+1)
+				path.append(Adjcell)
+				q.append(Adjcell) 
       
 	# Return -1 if destination cannot be reached  
 	return -1
 #End class
 
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
-dest = Point(2, 2) 
+dest = Point(5, 5) 
 source = Point(int(floor(tag.x)), int(floor(tag.y)))
-searching = False
 des_pos = Vector3(dest.x,dest.y,0)
 start = True
 BFS(map1,source,dest)
-path.popleft()
+path.pop()
 while path:
-	temp_point = path.popleft().pt
+	temp_point = path.pop().pt
 	des_pos.x = temp_point.x
 	des_pos.y = temp_point.y
 	des_pos.z = 0		
@@ -185,14 +185,17 @@ while path:
 		for x in range(310,320):
 			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
 			dist = depth_frame.get_distance(x, y)
-			if (dist < 2.0) & (dist >= 1.0):
+			#print(dist)
+			if (dist < 2.0) and (dist >= 1.0):
 				#Start path finding and send to gotopos with headings and change map grid
 				#to include found objects
 				BFS(map1,temp_point,dest)
 				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
-				#print(dist)
-	#while floor(tag.x) != des_pos.x & floor(tag.y) != des_pos.y:
-	#	pass
+				print(dist)
+	print(tag.x)
+	print(tag.y)
+	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
+		pass
 
 
 
