@@ -4,8 +4,9 @@
 # Test change 2020
 #
 import pyrealsense2 as rs
-import numpy as math
+import numpy as np
 import cv2
+import time
 
 from array import *
 from collections import deque 
@@ -15,9 +16,10 @@ import jetson.inference
 import jetson.utils
 from localizer_dwm1001.msg      import Tag
 from std_msgs.msg import Bool
-from std_msgs.msg import Bool
+from std_msgs.msg import Float64
 from std_msgs.msg import String
 from geometry_msgs.msg import Vector3
+from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
 
 import argparse
 import sys
@@ -29,22 +31,27 @@ visit = [[None for i in range(COL)] for j in range(ROW)]
 path_map = [[0 for i in range(COL)] for j in range(ROW)]
 map1 = [[1 for i in range(COL)] for j in range(ROW)]
 
+
 tag = Tag()
 # Configure depth and color streams
 pipeline = rs.pipeline()
 # Start streaming
-config = rs.config()
-config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-pipeline.start(config)
+
+pipeline.start()
 
 
+heading = 0.00
 def TagCallback(data):
 	tag.x = data.x
 	tag.y = data.y
 	tag.z = data.z
+
+def turn_angle_callback(data):
+	heading = data
+
 rospy.init_node("movement", anonymous=False)
 rospy.Subscriber("/dwm1001/tag1",     Tag,    TagCallback)
+rospy.Subscriber("/turn_angle",     Float64,    turn_angle_callback)
 
 
 #Class
@@ -143,48 +150,52 @@ def BFS(mat, src: Point, dest: Point):
 #End class
 
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
-
+dest = Point(2, 2) 
+source = Point(int(floor(tag.x)), int(floor(tag.y)))
 searching = False
-while True:
-	if searching:
-		print(isValid(1,1))
-		# Wait for a coherent pair of frames: depth and color
-		frames = pipeline.wait_for_frames()
-		depth_frame = frames.get_depth_frame()
-		color_frame = frames.get_color_frame()
-		if not depth_frame or not color_frame:
-			continue
+des_pos = Vector3(dest.x,dest.y,0)
+start = True
+BFS(map1,source,dest)
+path.popleft()
+while path:
+	temp_point = path.popleft().pt
+	des_pos.x = temp_point.x
+	des_pos.y = temp_point.y
+	des_pos.z = 0		
 
-		# Convert images to numpy arrays
-		depth_image = np.asanyarray(depth_frame.get_data())
-		color_image = np.asanyarray(color_frame.get_data())
+	#rospy.loginfo(des_pos)
+	print("Next des_pos:")
+	print(des_pos)
+	pub.publish(des_pos)
 
-		# Apply colormap on depth image (image must be converted to 8-bit per pixel first)
-		depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
-		# Stack both images horizontally
-		images = np.hstack((color_image, depth_colormap))
+	#while wait, check obstacle
+	#print(isValid(1,1))
+	# Wait for a coherent pair of frames: depth and color
+	frames = pipeline.wait_for_frames()
+	depth_frame = frames.get_depth_frame()
+	if not depth_frame:
+		continue
 
-		# Show images
-		cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-		cv2.imshow('RealSense', images)
-		cv2.waitKey(1)
+	
 
-		for y in range(230, 235):
-			for x in range(310,320):
-				#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
-				dist = depth_frame.get_distance(x, y)
-				if dist < 2 & dist >= 1:
-					#Start path finding and send to gotopos with headings and change map grid
-					#to include found objects
-					searching = False
-					print(dist)
-					print(dist)
-	else:
-		#run the path finding algorithm
-		#then set searching to true then call gotopos
-		BFS(map1,source,dest) 
-		rospy.loginfo(des_pos)
-		pub.publish(des_pos)
-#pub.publish(line)
+	
+
+	for y in range(230, 235):
+		for x in range(310,320):
+			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
+			dist = depth_frame.get_distance(x, y)
+			if (dist < 2.0) & (dist >= 1.0):
+				#Start path finding and send to gotopos with headings and change map grid
+				#to include found objects
+				BFS(map1,temp_point,dest)
+				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
+				#print(dist)
+	#while floor(tag.x) != des_pos.x & floor(tag.y) != des_pos.y:
+	#	pass
+
+
+
+				
+	#pub.publish(line)
 

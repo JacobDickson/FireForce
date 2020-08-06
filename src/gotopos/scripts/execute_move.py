@@ -27,8 +27,8 @@ from localizer_dwm1001.msg import Tag
 ####################################################
 
 from geometry_msgs.msg import Twist, Vector3, Pose, Point
-from std_msgs.msg import String
-from math import pow, atan2, sqrt, acos, pi
+from std_msgs.msg import String, Float64
+from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
 
 
 class ExecuteMove:
@@ -38,6 +38,7 @@ class ExecuteMove:
 		rospy.init_node('executing_movement', anonymous=False)
 		
 		self.velocity_publisher = rospy.Publisher('cmd_vel',Twist, queue_size=10) 
+		self.turn_ang = rospy.Publisher('turn_angle',Float64, queue_size=10) 
 
 		##################################################################
 		#rospy.Subscriber('/hedge_pos', Vector3, self.update_pose)
@@ -173,6 +174,7 @@ class ExecuteMove:
 				print("\nI am going to turn:  ")
 				print(self.turn_angle)
 
+
 				#get turn direction
 				if(self.turn_angle > 0):
 					self.right = True
@@ -228,6 +230,7 @@ class ExecuteMove:
 				self.velocity_publisher.publish(self.vel_msg)
 				#set back to going straingt right here or ramain still
 				self.rate = rospy.Rate(1)
+		self.turn_ang.publish(self.turn_angle)
 		#rospy.spin()
 		self.rate = rospy.Rate(1)
 		#self.rate.sleep()
