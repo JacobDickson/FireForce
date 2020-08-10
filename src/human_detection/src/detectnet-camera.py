@@ -68,8 +68,6 @@ rospy.Subscriber("/dwm1001/tag1",     Tag,    TagCallback)
 detected = False
 
 # create the camera and display
-camera = jetson.utils.gstCamera(opt.width, opt.height, opt.camera)
-display = jetson.utils.glDisplay()
 
 # process frames until user exits
 while 1:
