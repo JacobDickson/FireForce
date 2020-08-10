@@ -171,7 +171,7 @@ while path:
 	print(des_pos)
 	pub.publish(des_pos)
 
-	Wait for a coherent pair of frames: depth and color
+	#Wait for a coherent pair of frames: depth and color
 	frames = pipeline.wait_for_frames()
 	depth_frame = frames.get_depth_frame()
 	if not depth_frame:
