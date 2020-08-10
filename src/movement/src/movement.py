@@ -79,7 +79,7 @@ colNum = [0, -1, 1, 0]
 # Function to find the shortest path between  
 # a given source cell to a destination cell.  
 def BFS(mat, src: Point, dest: Point):
-	path = deque()
+	#path = deque()
 	print("test1") 
       
 	# check source and destination cell  
@@ -102,7 +102,7 @@ def BFS(mat, src: Point, dest: Point):
 	while q: 
 
 		curr = q.popleft() # Dequeue the front cell 
-		#path.append(curr)
+		path.append(curr)
 		# If we have reached the destination cell,  
 		# we are done  
 		pt = curr.pt 
