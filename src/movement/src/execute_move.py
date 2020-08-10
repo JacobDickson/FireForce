@@ -1,203 +1,294 @@
-#! /usr/bin/env python3
-# 
-# This was modified by Jacob Dickson, Ba Bui
-# Test change 2020
-#
-import pyrealsense2 as rs
-import numpy as np
-import cv2
-import time
+#!/usr/bin/env python
 
-from array import *
-from collections import deque 
+# Author: Alex Marlow
+
+# Editor: David Babin
 
 import rospy
-import jetson.inference
-import jetson.utils
-from localizer_dwm1001.msg      import Tag
-from std_msgs.msg import Bool
-from std_msgs.msg import Float64
+import numpy
+
+####################################################
+from localizer_dwm1001.msg import Tag
+####################################################
+
+from geometry_msgs.msg import Twist, Vector3, Pose
 from std_msgs.msg import String
-from geometry_msgs.msg import Vector3
+#!/usr/bin/env python
+
+# Author: Alex Marlow
+
+# Editor: David Babin
+
+import rospy
+import numpy
+
+####################################################
+from localizer_dwm1001.msg import Tag
+####################################################
+
+from geometry_msgs.msg import Twist, Vector3, Pose, Point
+from std_msgs.msg import String, Float64
 from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
 
-import argparse
-import sys
-#setting up map grid
-ROW = 11
-COL = 11
-path = deque()
-visit = [[None for i in range(COL)] for j in range(ROW)]
-#path_map = [[0 for i in range(COL)] for j in range(ROW)]
-map1 = [[1 for i in range(COL)] for j in range(ROW)]
+
+class ExecuteMove:
+
+	def __init__(self):
+		
+		rospy.init_node('executing_movement', anonymous=False)
+		
+		self.velocity_publisher = rospy.Publisher('cmd_vel',Twist, queue_size=10) 
+		self.turn_ang = rospy.Publisher('turn_angle',Float64, queue_size=10) 
+
+		##################################################################
+		#rospy.Subscriber('/hedge_pos', Vector3, self.update_pose)
+		rospy.Subscriber('/dwm1001/tag1', Tag, self.update_pose)
+		
+		rospy.Subscriber('desired_position', Vector3, self.update_des_pos)
+		rospy.Subscriber('delay', Point, self.update_delay_time)
+
+		self.rate = rospy.Rate(10)
+
+		##################################################################
+
+		self.delta_pos = Vector3()
+		self.pose = Tag()
+		self.des_pos = Vector3()
+		self.des_vec = Vector3()
+		self.turn_angle = 0.000
+		self.ang_vel = 2
+		self.stop = True
+		self.margin = .2
+		self.last_pos = Vector3()
+		self.rate = rospy.Rate(1)
+		self.rate.sleep()
+
+		
+		self.rate.sleep()
+		self.rate = rospy.Rate(10)
+
+		self.last_pos.x = self.pose.x
+		self.last_pos.y = self.pose.y
+
+		# make it not go to 0,0 right off the bat
+		self.des_pos.x = self.pose.x
+		self.des_pos.y = self.pose.y
+		print("initialized to: ")
+		print(self.des_pos.x)
+		print(self.des_pos.y)
+		print("from")
+		print(self.pose.x)
+		print(self.pose.y)
+
+		self.vel_msg = Twist()
+
+		self.vel_msg.linear.x = 0
+		self.vel_msg.angular.z = 0
+
+		self.vel_msg.linear.y = 0
+		self.vel_msg.linear.z = 0
+		self.vel_msg.angular.x = 0
+		self.vel_msg.angular.y = 0
+	
+		#should not move
+		self.velocity_publisher.publish(self.vel_msg)
 
 
-tag = Tag()
-# Configure depth and color streams
-pipeline = rs.pipeline()
-# Start streaming
+		# des_vec is vector from current to desired
+		# delta_pos is change in position from last position
+		#angular velocity vector should be in radians per second
+	def move(self):
+		#allow movement
+		if(self.check_pos() == False):
+			self.stop = False
 
-pipeline.start()
+		if self.stop == False:
+			#start moving forward
+			self.last_pos.x = self.pose.x
+			self.last_pos.y = self.pose.y
+			print("this ")
+			self.vel_msg.linear.x = .11
+			self.velocity_publisher.publish(self.vel_msg)
 
+			#go straight while checking for 2 seconds
+		turn_time = 2
+		self.rate = rospy.Rate(10)
+		while(turn_time > 0 and self.stop == False):
+			#print("straight loopy")
+			if(self.check_pos()):
+				print("reached")
+				self.stop = True
+				self.vel_msg.linear.x = 0
+				self.velocity_publisher.publish(self.vel_msg)
+				break
+			turn_time = turn_time -  .1
+	    		self.rate.sleep()
 
-heading = 0.00
-def TagCallback(data):
-	tag.x = data.x
-	tag.y = data.y
-	tag.z = data.z
+		#self.rate.sleep()
 
-def turn_angle_callback(data):
-	heading = data
+		print("\n I am at: ")
+		print(self.pose.x)
+		print(", ")
+		print(self.pose.y)
+		print("\n my last position was: ")
+		print(self.last_pos.x)
+		print(", ")
+		print(self.last_pos.y)
 
-rospy.init_node("movement", anonymous=False)
-rospy.Subscriber("/dwm1001/tag1",     Tag,    TagCallback)
-rospy.Subscriber("/turn_angle",     Float64,    turn_angle_callback)
+		#get two the two vectors
+		if(self.stop == False):
+			print("\nI am about to calculate")
+			self.des_vec.x = self.des_pos.x - self.pose.x
+			self.des_vec.y = self.des_pos.y - self.pose.y
+			self.delta_pos.x = self.pose.x - self.last_pos.x
+			self.delta_pos.y = self.pose.y - self.last_pos.y
+			print("\ndes_vec.x: ")
+			print(self.des_vec.x)
+			print("\ndes_vec.y: ")
+			print(self.des_vec.y)
+			print("\ndelta_pos.x: ")
+			print(self.delta_pos.x)
+			print("\nself.delta_pos.y: ")
+			print(self.delta_pos.y)
 
+			if not ((self.delta_pos.x == 0 and self.delta_pos.y == 0) or (self.des_vec.x == 0 and self.des_vec.y == 0)):
 
-#Class
-# To store matrix cell cordinates 
-class Point: 
-	def __init__(self,x: int, y: int):
-		self.x = x 
-		self.y = y 
-# A data structure for queue used in BFS 
-class queueNode: 
-	def __init__(self,pt: Point, dist: int): 
-		self.pt = pt  # The cordinates of the cell 
-		self.dist = dist  # Cell's distance from the source 
-  
-# Check whether given cell(row,col) 
-# is a valid cell or not 
-def isValid(row: int, col: int): 
-	return (row >= 0) and (row < ROW) and (col >= 0) and (col < COL) 
-  
-# These arrays are used to get row and column  
-# numbers of 4 neighbours of a given cell  
-rowNum = [-1, 0, 0, 1] 
-colNum = [0, -1, 1, 0] 
-  
-# Function to find the shortest path between  
-# a given source cell to a destination cell.  
-def BFS(mat, src: Point, dest: Point):
-        path = deque()
-	print("test1") 
-      
-	# check source and destination cell  
-	# of the matrix have value 1  
-	if mat[src.x][src.y]!=1 or mat[dest.x][dest.y]!=1: 
-		return -1
-      
-	visited = [[False for i in range(COL)] for j in range(ROW)]
+				#angle between our current trajectory and x axis(x axis of marvel mind sensors)
+				theta1 = acos(((self.delta_pos.x)/(sqrt(self.delta_pos.y**2 + self.delta_pos.x**2))))
+				if(self.pose.y < self.last_pos.y):
+					theta1 = (-1)*theta1
 
-	# Mark the source cell as visited  
-	visited[src.x][src.y] = True
+				#angle between our desired trajectory and the x axis
+				theta2 = acos(((self.des_vec.x)/(sqrt(self.des_vec.y**2 + self.des_vec.x**2))))
+				if(self.des_pos.y < self.pose.y):
+					theta2 = (-1)*theta2
 
-	# Create a queue for BFS  
-	q = deque() 
-	# Distance of source cell is 0 
-	s = queueNode(src,0) 
-	q.append(s) #  Enqueue source cell 
-	path.append(s)
-	# Do a BFS starting from source cell  
-	while q: 
+				#angle needed to be turned(positive for right turn)
+				self.turn_angle = theta1 - theta2
+				#make it so it does not go turn to the right place but in wrong direction
+				if(self.turn_angle > pi):
+					self.turn_angle -= 2*pi
+				if(self.turn_angle < -pi):
+					self.turn_angle += 2*pi
 
-		curr = q.popleft() # Dequeue the front cell 
-		#path.append(curr)
-		# If we have reached the destination cell,  
-		# we are done  
-		pt = curr.pt 
-		if pt.x == dest.x and pt.y == dest.y:
-
-			minimum = curr
-			path.append(curr)
-			print(curr.pt.y)
-			while path:
-				temp = path.popleft()
-				visit[temp.pt.x][temp.pt.y] = temp
+				print("\nI am going to turn:  ")
+				print(self.turn_angle)
 
 
-
-			while pt.x != src.x or pt.y != src.y:
-
-				for i in range(4): 
-					row = pt.x + rowNum[i] 
-					col = pt.y + colNum[i] 
-
-				    # if adjacent cell is valid, has path   
-				    # and not visited yet, enqueue it. 
-					if (isValid(row,col) and mat[row][col] == 1 and visit[row][col] != None):
-						if (visit[row][col].dist < minimum.dist):
-							minimum = visit[row][col]
-				print("test")
-				path.append(minimum)
-				pt = minimum.pt
-                        
-			return curr.dist 
-          
-		# Otherwise enqueue its adjacent cells  
-		for i in range(4): 
-			row = pt.x + rowNum[i] 
-			col = pt.y + colNum[i] 
-		      
-			# if adjacent cell is valid, has path   
-			# and not visited yet, enqueue it. 
-			if (isValid(row,col) and mat[row][col] == 1 and not visited[row][col]): 
-				visited[row][col] = True
-				Adjcell = queueNode(Point(row,col),curr.dist+1)
-				path.append(Adjcell)
-				q.append(Adjcell) 
-      
-	# Return -1 if destination cannot be reached  
-	return -1
-#End class
-time.sleep(2)
-pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
-dest = Point(2, 2) 
-source = Point(int(floor(tag.x)), int(floor(tag.y)))
-des_pos = Vector3(dest.x,dest.y,0)
-start = True
-BFS(map1,source,dest)
-path.pop()
-while path:
-	temp_point = path.pop().pt
-	des_pos.x = temp_point.x
-	des_pos.y = temp_point.y
-	des_pos.z = 0		
-
-	#rospy.loginfo(des_pos)
-	print("Next des_pos:")
-	print(des_pos)
-	pub.publish(des_pos)
-
-
-	#while wait, check obstacle
-	#print(isValid(1,1))
-	# Wait for a coherent pair of frames: depth and color
-	frames = pipeline.wait_for_frames()
-	depth_frame = frames.get_depth_frame()
-	if not depth_frame:
-		continue
-
+				#get turn direction
+				if(self.turn_angle > 0):
+					self.right = True
+				else:
+					self.right = False
+					self.turn_angle = self.turn_angle*(-1)
 	
 
-	
+				turn_time = self.turn_angle/self.ang_vel
 
-	for y in range(230, 235):
-		for x in range(310,320):
-			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
-			dist = depth_frame.get_distance(x, y)
-			#print(dist)
-			if (dist < 2.0) and (dist >= 1.0):
-				#Start path finding and send to gotopos with headings and change map grid
-				#to include found objects
-				BFS(map1,temp_point,dest)
-				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
-				print(dist)
-	print(tag.x)
-	print(tag.y)
-	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
-		pub.publish(des_pos)
-
-
+				print("\n I am going to turn for:  ")
+				print(turn_time)
+				self.rate = rospy.Rate(10)
 				
-	#pub.publish(line)
+				self.vel_msg.linear.x = 0
+				self.vel_msg.angular.z = 0
+				self.velocity_publisher.publish(self.vel_msg)
+				#raw_input("yeet")
+				self.vel_msg.linear.x = .11
+				self.velocity_publisher.publish(self.vel_msg)
+				
+
+				#set turn and velocity, maybe have some error for turn to not trigger, test with controller to see if signs are coorect
+				if(self.right):
+					self.vel_msg.angular.z = -2
+					self.velocity_publisher.publish(self.vel_msg)
+				else:
+					self.vel_msg.angular.z = 2
+					self.velocity_publisher.publish(self.vel_msg)
+	    
+				#need to manage positive or negetive turn direction, acos probably does not give me the direction
+				#loop repeats every 10th of a second, checking if we are at the position, still need to introduce error to position check
+				while(turn_time > .1 and self.stop == False):
+					self.rate.sleep()
+					if(self.check_pos()):
+						print("reached")
+						self.stop = True
+						self.vel_msg.angular.z = 0
+						self.vel_msg.linear.x = 0
+						self.velocity_publisher.publish(self.vel_msg)
+						break
+					turn_time -= .1
+					print("\n I am turning right now")
+				self.rate = rospy.Rate(1/turn_time)
+				self.rate.sleep()
+				if(self.check_pos()):
+					self.stop = True
+					self.vel_msg.angular.z = 0
+					self.vel_msg.linear.x = 0
+	   				self.velocity_publisher.publish(self.vel_msg)
+
+				self.vel_msg.angular.z = 0
+				self.velocity_publisher.publish(self.vel_msg)
+				#set back to going straingt right here or ramain still
+				self.rate = rospy.Rate(1)
+		self.turn_ang.publish(self.turn_angle)
+		#rospy.spin()
+		self.rate = rospy.Rate(1)
+		#self.rate.sleep()
+		
+	
+# possibly need to introduce turning error
+
+	
+	
+	#maybe want to round the numbers depending on testing results
+	def update_delay_time(self, data):
+		#print("\ndatax is: ")
+		#print(data.x)
+		#print("\ndatay is: ")
+		#print(data.y)
+		print("\nTime Sent from ws: ")
+		print(int(float(data.x)))
+		print(".", int(data.y))
+		print("\nTime received: ")
+		print(rospy.Time.now().secs, rospy.Time.now().nsecs)
+
+	#maybe want to round the numbers depending on testing results
+	def update_pose(self, data):
+		#print("\ndatax is: ")
+		#print(data.x)
+		#print("\ndatay is: ")
+		#print(data.y)
+		self.pose.x = data.x
+		self.pose.y = data.y
+
+
+
+	def update_des_pos(self, data):
+		print("\ndes_posx is: ")
+		print(data.x)
+		print("\ndes_posy is: ")
+		print(data.y)
+		self.des_pos.x = data.x
+		self.des_pos.y = data.y
+
+	#checks if in the acceptable margin from the desired position
+	def check_pos(self):
+		if(self.des_pos.x > self.pose.x + self.margin):
+	    		return False
+		elif(self.des_pos.x < self.pose.x - self.margin):
+	    		return False
+		elif(self.des_pos.y < self.pose.y - self.margin):
+	    		return False
+		elif(self.des_pos.y > self.pose.y + self.margin):
+	    		return False
+		else:
+			return True
+			
+if __name__ == '__main__':
+	cl = ExecuteMove()
+	while not rospy.is_shutdown():
+		try:
+			cl.move()
+			rospy.sleep(1)
+		except rospy.ROSInterruptException:
+			pass
