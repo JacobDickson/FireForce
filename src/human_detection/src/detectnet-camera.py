@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 #
 # Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
 #
@@ -28,7 +28,6 @@
 import rospy
 import jetson.inference
 import jetson.utils
-import pyrealsense2 as rs
 from localizer_dwm1001.msg      import Tag
 from std_msgs.msg import Bool
 
