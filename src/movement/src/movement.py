@@ -131,7 +131,7 @@ def BFS(mat, src: Point, dest: Point):
 				print("test")
 				path.append(minimum)
 				pt = minimum.pt
-                        path.append(queueNode(Point(dest.x,dest.y),0))
+			path.append(queueNode(Point(dest.x,dest.y),0))
 			return curr.dist 
           
 		# Otherwise enqueue its adjacent cells  
