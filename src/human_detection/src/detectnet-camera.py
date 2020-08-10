@@ -67,13 +67,13 @@ rospy.Subscriber("/dwm1001/tag1",     Tag,    TagCallback)
 detected = False
 
 # create the camera and display
-camera = jetson.utils.gstCamera(opt.width, opt.height, opt.camera)
+#camera = jetson.utils.gstCamera(opt.width, opt.height, opt.camera)
 #display = jetson.utils.glDisplay()
 
 # process frames until user exits
 while 1:
 	# capture the image
-	img, width, height = camera.CaptureRGBA()
+	#img, width, height = camera.CaptureRGBA()
 
 	# detect objects in the image (with overlay)
 	detections = net.Detect(img, width, height, opt.overlay)
