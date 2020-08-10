@@ -102,7 +102,7 @@ def BFS(mat, src: Point, dest: Point):
 	while q: 
 
 		curr = q.popleft() # Dequeue the front cell 
-		path.append(curr)
+		#path.append(curr)
 		# If we have reached the destination cell,  
 		# we are done  
 		pt = curr.pt 
@@ -197,6 +197,7 @@ while path:
 	print(tag.y)
 	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
 		pub.publish(des_pos)
+		print("waiting")
 
 
 				
