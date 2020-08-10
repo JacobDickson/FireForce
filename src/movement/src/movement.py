@@ -163,41 +163,40 @@ while path:
 	temp_point = path.pop().pt
 	print(temp_point.x)
 	print(temp_point.y)
-	#des_pos.x = temp_point.x
-	#des_pos.y = temp_point.y
+	des_pos.x = temp_point.x
+	des_pos.y = temp_point.y
 	#des_pos.z = 0		
 
-	#print("Next des_pos:")
-	#print(des_pos)
-	#pub.publish(des_pos)
+	print("Next des_pos:")
+	print(des_pos)
+	pub.publish(des_pos)
 
-	# Wait for a coherent pair of frames: depth and color
-	#frames = pipeline.wait_for_frames()
-	#depth_frame = frames.get_depth_frame()
-	#if not depth_frame:
-	#	continue
-
-	
+	 Wait for a coherent pair of frames: depth and color
+	frames = pipeline.wait_for_frames()
+	depth_frame = frames.get_depth_frame()
+	if not depth_frame:
+		continue
 
 	
 
-	#for y in range(230, 235):
-	#	for x in range(310,320):
-	#		#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
-	#		dist = depth_frame.get_distance(x, y)
-	#		#print(dist)
-	#		if (dist < 2.0) and (dist >= 1.0):
-	#			#Start path finding and send to gotopos with headings and change map grid
-	#			#to include found objects
-	#			BFS(map1,temp_point,dest)
-	#			map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
-	#			print(dist)
-	#print(tag.x)
-	#print(tag.y)
-	#while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
-	#	pub.publish(des_pos)
-	#	print("waiting")
+	
+
+	for y in range(230, 235):
+		for x in range(310,320):
+			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
+			dist = depth_frame.get_distance(x, y)
+			#print(dist)
+			if (dist < 2.0) and (dist >= 1.0):
+				#Start path finding and send to gotopos with headings and change map grid
+				#to include found objects
+				BFS(map1,temp_point,dest)
+				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
+				print(dist)
+	print(tag.x)
+	print(tag.y)
+	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
+		pub.publish(des_pos)
+		print("waiting")
 
 
-				
-	#pub.publish(line)
+			
