@@ -156,7 +156,6 @@ source = Point(int(floor(tag.x)), int(floor(tag.y)))
 des_pos = Vector3(dest.x,dest.y,0)
 start = True
 BFS(map1,source,dest)
-path.pop()
 while path:
 	temp_point = path.pop().pt
 	des_pos.x = temp_point.x
