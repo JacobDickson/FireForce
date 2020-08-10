@@ -73,7 +73,7 @@ detected = False
 # process frames until user exits
 while 1:
 	# capture the image
-	#img, width, height = camera.CaptureRGBA()
+	img, width, height = camera.CaptureRGBA()
 
 	# detect objects in the image (with overlay)
 	detections = net.Detect(img, width, height, opt.overlay)
