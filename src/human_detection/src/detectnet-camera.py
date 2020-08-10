@@ -68,7 +68,7 @@ detected = False
 
 # create the camera and display
 camera = jetson.utils.gstCamera(opt.width, opt.height, opt.camera)
-display = jetson.utils.glDisplay()
+#display = jetson.utils.glDisplay()
 
 # process frames until user exits
 while 1:
