@@ -80,7 +80,6 @@ colNum = [0, -1, 1, 0]
 # a given source cell to a destination cell.  
 def BFS(mat, src: Point, dest: Point):
 	#path = deque()
-	path.append(queueNode(Point(dest.x,dest.y),0))
 	print("test1") 
       
 	# check source and destination cell  
@@ -108,6 +107,7 @@ def BFS(mat, src: Point, dest: Point):
 		# we are done  
 		pt = curr.pt 
 		if pt.x == dest.x and pt.y == dest.y:
+			path.append(queueNode(Point(dest.x,dest.y),0))
 
 			minimum = curr
 			path.append(curr)
