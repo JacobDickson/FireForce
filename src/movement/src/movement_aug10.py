@@ -23,6 +23,7 @@ from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
 
 import argparse
 import sys
+time.sleep(1)
 #setting up map grid
 ROW = 11
 COL = 11
@@ -79,6 +80,8 @@ colNum = [0, -1, 1, 0]
 # Function to find the shortest path between  
 # a given source cell to a destination cell.  
 def BFS(mat, src: Point, dest: Point):
+	print("Jacoba")
+	path=deque()
 	print("test1") 
       
 	# check source and destination cell  
@@ -149,19 +152,18 @@ def BFS(mat, src: Point, dest: Point):
 	# Return -1 if destination cannot be reached  
 	return -1
 #End class
-time.sleep(2)
+
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
 dest = Point(2, 2) 
 source = Point(int(floor(tag.x)), int(floor(tag.y)))
+print(source.x)
 des_pos = Vector3(dest.x,dest.y,0)
 start = True
 BFS(map1,source,dest)
-path.pop()
+
 while path:
 	temp_point = path.pop().pt
-	des_pos.x = temp_point.x
-	des_pos.y = temp_point.y
-	des_pos.z = 0		
+	des_pos = Vector3(temp_point.x,temp_point.y,0)
 
 	#rospy.loginfo(des_pos)
 	print("Next des_pos:")
@@ -195,8 +197,11 @@ while path:
 	print(tag.x)
 	print(tag.y)
 	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
+		print("waiting")
 		pub.publish(des_pos)
+
 
 
 				
 	#pub.publish(line)
+
