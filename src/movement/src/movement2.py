@@ -149,9 +149,9 @@ def BFS(mat, src: Point, dest: Point):
 	# Return -1 if destination cannot be reached  
 	return -1
 #End class
-time.sleep(2)
+
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
-dest = Point(2, 2) 
+dest = Point(1, 1) 
 source = Point(int(floor(tag.x)), int(floor(tag.y)))
 des_pos = Vector3(dest.x,dest.y,0)
 start = True
@@ -195,8 +195,10 @@ while path:
 	print(tag.x)
 	print(tag.y)
 	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
-		pub.publish(des_pos)
+		pass
+
 
 
 				
 	#pub.publish(line)
+
