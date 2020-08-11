@@ -341,7 +341,7 @@ class DisplayInRviz:
 		marker.pose.orientation.y = 0
 		marker.pose.orientation.z = 0
 		marker.pose.orientation.w = 1
-		marker.header.frame_id = "map"
+		#marker.header.frame_id = "map"
 		marker.header.stamp = rospy.get_rostime()
 		marker.id = 1
 
