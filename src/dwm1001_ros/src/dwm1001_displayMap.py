@@ -74,7 +74,6 @@ class DisplayInRviz:
         """
 
         marker = Marker()
-        marker.header.frame_id = "map"
         marker.type = Marker.SPHERE
         marker.scale.x = msg.scale * 0.45
         marker.scale.y = msg.scale * 0.45
@@ -327,6 +326,7 @@ class DisplayInRviz:
 		position = Point(data.x, data.y, data.z)
 		self.markers_pub = rospy.Publisher("map2", Marker, queue_size=1)
 		marker = Marker()
+		marker.header.frame_id = "map"
 		marker.type = marker.SPHERE
 		marker.action = marker.ADD
 		marker.color.r = 1
@@ -341,7 +341,6 @@ class DisplayInRviz:
 		marker.pose.orientation.y = 0
 		marker.pose.orientation.z = 0
 		marker.pose.orientation.w = 1
-		#marker.header.frame_id = "map"
 		marker.header.stamp = rospy.get_rostime()
 		marker.id = 1
 
