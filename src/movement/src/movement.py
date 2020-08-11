@@ -58,7 +58,7 @@ rospy.Subscriber("/turn_angle",     Float64,    turn_angle_callback)
 
 # To store matrix cell cordinates 
 class Point: 
-	def __init__(self,x: int, y: int):
+	def __init__(self,x: double, y: double):
 		self.x = x 
 		self.y = y 
 # A data structure for queue used in BFS 
@@ -142,7 +142,7 @@ def BFS(mat, src: Point, dest: Point):
 			# and not visited yet, enqueue it. 
 			if (isValid(row,col) and mat[row][col] == 1 and not visited[row][col]): 
 				visited[row][col] = True
-				Adjcell = queueNode(Point(row,col),curr.dist+1)
+				Adjcell = queueNode(Point(row/2,col/2),curr.dist+1)
 				path.append(Adjcell)
 				q.append(Adjcell) 
       
@@ -180,7 +180,7 @@ while path:
 			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
 			dist = depth_frame.get_distance(x, y)
 			#print(dist)
-			if (dist < 2.0) and (dist >= 1.0):
+			if (dist < 1.0) and (dist >= 0.5):
 				#Start path finding and send to gotopos with headings and change map grid
 				#to include found objects
 				BFS(map1,temp_point,dest)
