@@ -23,9 +23,14 @@ from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
 
 import argparse
 import sys
-#setting up map grid
+
+#Size of path matrix
 ROW = 11
-COL = 11
+COL = ROW
+
+#Accounting for negative coordinated in the matrix
+OFFSET = floor(row / 2)
+
 path = deque()
 visit = [[None for i in range(COL)] for j in range(ROW)]
 #path_map = [[0 for i in range(COL)] for j in range(ROW)]
@@ -154,16 +159,16 @@ def BFS(mat, src: Point, dest: Point):
 time.sleep(2)
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
 dest = Point(2, 2) 
-source = Point(int(floor(tag.x)), int(floor(tag.y)))
-des_pos = Vector3(dest.x,dest.y,0)
+source = Point(int(floor(tag.x)+OFFSET), int(floor(tag.y))+OFFSET)
+des_pos = Vector3(dest.x+OFFSET,dest.y,0+OFFSET)
 start = True
 BFS(map1,source,dest)
 while path:
 	temp_point = path.pop().pt
 	print(temp_point.x)
 	print(temp_point.y)
-	des_pos.x = temp_point.x
-	des_pos.y = temp_point.y
+	des_pos.x = temp_point.x - OFFSET
+	des_pos.y = temp_point.y - OFFSET
 	#des_pos.z = 0		
 
 	print("Next des_pos:")
