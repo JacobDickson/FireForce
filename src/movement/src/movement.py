@@ -79,6 +79,7 @@ colNum = [0, -1, 1, 0]
 # Function to find the shortest path between  
 # a given source cell to a destination cell.  
 def BFS(mat, src: Point, dest: Point):
+	#path = deque()
 	print("test1") 
       
 	# check source and destination cell  
@@ -108,7 +109,7 @@ def BFS(mat, src: Point, dest: Point):
 		if pt.x == dest.x and pt.y == dest.y:
 
 			minimum = curr
-			#path.append(curr)
+			path.append(curr)
 			print(curr.pt.y)
 			while path:
 				temp = path.popleft()
@@ -130,7 +131,8 @@ def BFS(mat, src: Point, dest: Point):
 				print("test")
 				path.append(minimum)
 				pt = minimum.pt
-                        
+			
+			path.insert(0,queueNode(Point(dest.x,dest.y),0))
 			return curr.dist 
           
 		# Otherwise enqueue its adjacent cells  
@@ -156,22 +158,19 @@ source = Point(int(floor(tag.x)), int(floor(tag.y)))
 des_pos = Vector3(dest.x,dest.y,0)
 start = True
 BFS(map1,source,dest)
-path.pop()
 while path:
 	temp_point = path.pop().pt
+	print(temp_point.x)
+	print(temp_point.y)
 	des_pos.x = temp_point.x
 	des_pos.y = temp_point.y
-	des_pos.z = 0		
+	#des_pos.z = 0		
 
-	#rospy.loginfo(des_pos)
 	print("Next des_pos:")
 	print(des_pos)
 	pub.publish(des_pos)
 
-
-	#while wait, check obstacle
-	#print(isValid(1,1))
-	# Wait for a coherent pair of frames: depth and color
+	#Wait for a coherent pair of frames: depth and color
 	frames = pipeline.wait_for_frames()
 	depth_frame = frames.get_depth_frame()
 	if not depth_frame:
@@ -196,7 +195,7 @@ while path:
 	print(tag.y)
 	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
 		pub.publish(des_pos)
+		print("waiting")
 
 
-				
-	#pub.publish(line)
+			
