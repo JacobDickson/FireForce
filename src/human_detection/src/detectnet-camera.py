@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
 #
@@ -28,6 +28,7 @@
 import rospy
 import jetson.inference
 import jetson.utils
+import pyrealsense2 as rs
 from localizer_dwm1001.msg      import Tag
 from std_msgs.msg import Bool
 
@@ -68,7 +69,7 @@ detected = False
 
 # create the camera and display
 camera = jetson.utils.gstCamera(opt.width, opt.height, opt.camera)
-display = jetson.utils.glDisplay()
+#display = jetson.utils.glDisplay()
 
 # process frames until user exits
 while 1:
@@ -93,8 +94,8 @@ while 1:
 	#Resets detection to false.
 	detected = False
 ##	# render the image
-	display.RenderOnce(img, width, height)
+	#display.RenderOnce(img, width, height)
 ##	# update the title bar
-	display.SetTitle("{:s} | Network {:.0f} FPS".format(opt.network, net.GetNetworkFPS()))
+	#display.SetTitle("{:s} | Network {:.0f} FPS".format(opt.network, net.GetNetworkFPS()))
 
 	
