@@ -1,31 +1,34 @@
 #! /usr/bin/env python3
 # 
-# This was modified by Jacob Dickson, Ba Bui
+# This was writen by Jacob Dickson, Ba Bui
 # Test change 2020
 #
 import pyrealsense2 as rs
 import numpy as np
 import cv2
 import time
-
-from array import *
-from collections import deque 
-
 import rospy
 import jetson.inference
 import jetson.utils
-from localizer_dwm1001.msg      import Tag
+import argparse
+import sys
+
+from localizer_dwm1001.msg import Tag
 from std_msgs.msg import Bool
 from std_msgs.msg import Float64
 from std_msgs.msg import String
 from geometry_msgs.msg import Vector3
 from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
+from array import *
+from collections import deque 
 
-import argparse
-import sys
-#setting up map grid
+#Size of path matrix
 ROW = 11
-COL = 11
+COL = ROW
+
+#Accounting for negative coordinated in the matrix
+OFFSET = floor(row / 2)
+
 path = deque()
 visit = [[None for i in range(COL)] for j in range(ROW)]
 #path_map = [[0 for i in range(COL)] for j in range(ROW)]
@@ -36,11 +39,11 @@ tag = Tag()
 # Configure depth and color streams
 pipeline = rs.pipeline()
 # Start streaming
-
 pipeline.start()
 
-
+#Initialize heading
 heading = 0.00
+
 def TagCallback(data):
 	tag.x = data.x
 	tag.y = data.y
@@ -53,11 +56,9 @@ rospy.init_node("movement", anonymous=False)
 rospy.Subscriber("/dwm1001/tag1",     Tag,    TagCallback)
 rospy.Subscriber("/turn_angle",     Float64,    turn_angle_callback)
 
-
-#Class
 # To store matrix cell cordinates 
 class Point: 
-	def __init__(self,x: int, y: int):
+	def __init__(self,x: double, y: double):
 		self.x = x 
 		self.y = y 
 # A data structure for queue used in BFS 
@@ -100,7 +101,6 @@ def BFS(mat, src: Point, dest: Point):
 	path.append(s)
 	# Do a BFS starting from source cell  
 	while q: 
-
 		curr = q.popleft() # Dequeue the front cell 
 		#path.append(curr)
 		# If we have reached the destination cell,  
@@ -115,8 +115,6 @@ def BFS(mat, src: Point, dest: Point):
 				temp = path.popleft()
 				visit[temp.pt.x][temp.pt.y] = temp
 
-
-
 			while pt.x != src.x or pt.y != src.y:
 
 				for i in range(4): 
@@ -128,7 +126,7 @@ def BFS(mat, src: Point, dest: Point):
 					if (isValid(row,col) and mat[row][col] == 1 and visit[row][col] != None):
 						if (visit[row][col].dist < minimum.dist):
 							minimum = visit[row][col]
-				print("test")
+				#print("test")
 				path.append(minimum)
 				pt = minimum.pt
 			
@@ -144,26 +142,26 @@ def BFS(mat, src: Point, dest: Point):
 			# and not visited yet, enqueue it. 
 			if (isValid(row,col) and mat[row][col] == 1 and not visited[row][col]): 
 				visited[row][col] = True
-				Adjcell = queueNode(Point(row,col),curr.dist+1)
+				Adjcell = queueNode(Point(row/2,col/2),curr.dist+1)
 				path.append(Adjcell)
 				q.append(Adjcell) 
       
 	# Return -1 if destination cannot be reached  
 	return -1
-#End class
+#End Starting main algorithm
 time.sleep(2)
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
 dest = Point(2, 2) 
-source = Point(int(floor(tag.x)), int(floor(tag.y)))
-des_pos = Vector3(dest.x,dest.y,0)
+source = Point(int(floor(tag.x)+OFFSET), int(floor(tag.y))+OFFSET)
+des_pos = Vector3(dest.x+OFFSET,dest.y,0+OFFSET)
 start = True
 BFS(map1,source,dest)
 while path:
 	temp_point = path.pop().pt
 	print(temp_point.x)
 	print(temp_point.y)
-	des_pos.x = temp_point.x
-	des_pos.y = temp_point.y
+	des_pos.x = temp_point.x - OFFSET
+	des_pos.y = temp_point.y - OFFSET
 	#des_pos.z = 0		
 
 	print("Next des_pos:")
@@ -176,26 +174,24 @@ while path:
 	if not depth_frame:
 		continue
 
-	
-
-	
-
+	#Checking for depth of center reigon of screen
 	for y in range(230, 235):
 		for x in range(310,320):
 			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
 			dist = depth_frame.get_distance(x, y)
 			#print(dist)
-			if (dist < 2.0) and (dist >= 1.0):
+			if (dist < 1.0) and (dist >= 0.5):
 				#Start path finding and send to gotopos with headings and change map grid
 				#to include found objects
 				BFS(map1,temp_point,dest)
 				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
-				print(dist)
-	print(tag.x)
-	print(tag.y)
+				#print obstical map
+				for i in range(ROW):
+					print(*map1[i])
+				#print(dist)
+	#print(tag.x)
+	#print(tag.y)
 	while floor(tag.x) != des_pos.x or floor(tag.y) != des_pos.y:
 		pub.publish(des_pos)
-		print("waiting")
-
-
-			
+		#print("waiting")
+		
