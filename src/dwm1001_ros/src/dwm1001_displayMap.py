@@ -345,6 +345,7 @@ class DisplayInRviz:
 		marker.id = 1
 
 		self.markers_pub.publish(marker)
+        	server.insert(marker, self.processFeedback)
 
     def makeHumanTag(self, msg):
         """
