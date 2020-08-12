@@ -74,7 +74,6 @@ class DisplayInRviz:
         """
 
         marker = Marker()
-        marker.header.frame_id = "map"
         marker.type = Marker.SPHERE
         marker.scale.x = msg.scale * 0.45
         marker.scale.y = msg.scale * 0.45
@@ -324,8 +323,16 @@ class DisplayInRviz:
 	
     def makeAfterImage(self, data):
 	if theBoo == True:
+		
+    
+		# create an interactive marker for our server
+		int_marker = InteractiveMarker()
+		int_marker.header.frame_id = "map"
+		int_marker.name = "my_marker"
+		int_marker.description = "After image"
+		
 		position = Point(data.x, data.y, data.z)
-		self.markers_pub = rospy.Publisher("map2", Marker, queue_size=1)
+		#self.markers_pub = rospy.Publisher("map2", Marker, queue_size=1)
 		marker = Marker()
 		marker.type = marker.SPHERE
 		marker.action = marker.ADD
@@ -341,11 +348,25 @@ class DisplayInRviz:
 		marker.pose.orientation.y = 0
 		marker.pose.orientation.z = 0
 		marker.pose.orientation.w = 1
-		marker.header.frame_id = "map"
 		marker.header.stamp = rospy.get_rostime()
 		marker.id = 1
 
-		self.markers_pub.publish(marker)
+		#self.markers_pub.publish(marker)
+		#server.applyChanges()
+		# create a non-interactive control which contains the box
+		box_control = InteractiveMarkerControl()
+		box_control.always_visible = True
+		box_control.markers.append( marker )
+
+		# add the control to the interactive marker
+		int_marker.controls.append( box_control )
+
+
+		# add the interactive marker to our collection &
+		# tell the server to call processFeedback() when feedback arrives for it
+		server.insert(int_marker, self.processFeedback)
+
+		
 
     def makeHumanTag(self, msg):
         """
