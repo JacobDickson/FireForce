@@ -275,9 +275,9 @@ class ExecuteMove:
 	def check_pos(self):
 		if(self.des_pos.x > self.pose.x + self.margin):
 	    		return False
-		elif(self.des_pos.x < self.pose.x - self.margin):
+		elif(self.des_pos.x < self.pose.x):#self.des_pos.x < self.pose.x - self.margin
 	    		return False
-		elif(self.des_pos.y < self.pose.y - self.margin):
+		elif(self.des_pos.y < self.pose.y):#self.des_pos.y < self.pose.y - self.margin
 	    		return False
 		elif(self.des_pos.y > self.pose.y + self.margin):
 	    		return False

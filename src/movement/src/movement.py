@@ -20,7 +20,9 @@ from std_msgs.msg import String
 from geometry_msgs.msg import Vector3
 from math import pow, atan2, sqrt, acos, pi, sin, cos, floor
 from array import *
-from collections import deque 
+from collections import deque
+
+GRID_TRANSFORM = 1
 
 #Size of path matrix
 ROW = 11
@@ -58,7 +60,7 @@ rospy.Subscriber("/turn_angle",     Float64,    turn_angle_callback)
 
 # To store matrix cell cordinates 
 class Point: 
-	def __init__(self,x: double, y: double):
+	def __init__(self,x: float, y: float):
 		self.x = x 
 		self.y = y 
 # A data structure for queue used in BFS 
@@ -85,13 +87,13 @@ def BFS(mat, src: Point, dest: Point):
       
 	# check source and destination cell  
 	# of the matrix have value 1  
-	if mat[src.x][src.y]!=1 or mat[dest.x][dest.y]!=1: 
+	if mat[int(src.x*GRID_TRANSFORM)][int(src.y*GRID_TRANSFORM)]!=1 or mat[int(dest.x*GRID_TRANSFORM)][int(dest.y*GRID_TRANSFORM)]!=1: 
 		return -1
       
 	visited = [[False for i in range(COL)] for j in range(ROW)]
 
 	# Mark the source cell as visited  
-	visited[src.x][src.y] = True
+	visited[int(src.x*GRID_TRANSFORM)][int(src.y*GRID_TRANSFORM)] = True
 
 	# Create a queue for BFS  
 	q = deque() 
@@ -113,20 +115,21 @@ def BFS(mat, src: Point, dest: Point):
 			print(curr.pt.y)
 			while path:
 				temp = path.popleft()
-				visit[temp.pt.x][temp.pt.y] = temp
+				visit[int(temp.pt.x*GRID_TRANSFORM)][int(temp.pt.y*GRID_TRANSFORM)] = temp
 
 			while pt.x != src.x or pt.y != src.y:
 
 				for i in range(4): 
-					row = pt.x + rowNum[i] 
-					col = pt.y + colNum[i] 
+					row = int(pt.x) + rowNum[i] 
+					col = int(pt.y) + colNum[i] 
 
 				    # if adjacent cell is valid, has path   
 				    # and not visited yet, enqueue it. 
 					if (isValid(row,col) and mat[row][col] == 1 and visit[row][col] != None):
 						if (visit[row][col].dist < minimum.dist):
 							minimum = visit[row][col]
-				#print("test")
+				print(pt.x)
+				print(src.x)
 				path.append(minimum)
 				pt = minimum.pt
 			
@@ -135,14 +138,15 @@ def BFS(mat, src: Point, dest: Point):
           
 		# Otherwise enqueue its adjacent cells  
 		for i in range(4): 
-			row = pt.x + rowNum[i] 
-			col = pt.y + colNum[i] 
+			row = int(pt.x*GRID_TRANSFORM) + rowNum[i] 
+			col = int(pt.y*GRID_TRANSFORM) + colNum[i] 
 		      
 			# if adjacent cell is valid, has path   
 			# and not visited yet, enqueue it. 
 			if (isValid(row,col) and mat[row][col] == 1 and not visited[row][col]): 
 				visited[row][col] = True
-				Adjcell = queueNode(Point(row/2,col/2),curr.dist+1)
+				#Modify here when changing grid size
+				Adjcell = queueNode(Point(row/GRID_TRANSFORM,col/GRID_TRANSFORM),curr.dist+1)
 				path.append(Adjcell)
 				q.append(Adjcell) 
       
@@ -151,12 +155,15 @@ def BFS(mat, src: Point, dest: Point):
 #End Starting main algorithm
 time.sleep(2)
 pub = rospy.Publisher('desired_position', Vector3, queue_size=10)
-dest = Point(2, 2) 
-source = Point(int(floor(tag.x)+OFFSET), int(floor(tag.y))+OFFSET)
-des_pos = Vector3(dest.x+OFFSET,dest.y,0+OFFSET)
+dest = Point(2+OFFSET, 2+OFFSET) 
+source = Point(float(floor(tag.x)+OFFSET), float(floor(tag.y)+OFFSET))
+des_pos = Vector3(dest.x,dest.y,0)
 start = True
 BFS(map1,source,dest)
 while path:
+	#print obstical map
+	for i in range(ROW):
+		print(*map1[i])
 	temp_point = path.pop().pt
 	print(temp_point.x)
 	print(temp_point.y)
@@ -180,14 +187,12 @@ while path:
 			#print("At x =", tag.x, ", y =", tag.y, ", z =", tag.z)
 			dist = depth_frame.get_distance(x, y)
 			#print(dist)
-			if (dist < 1.0) and (dist >= 0.5):
+			if (dist < 2.0) and (dist >= 1.0):
 				#Start path finding and send to gotopos with headings and change map grid
 				#to include found objects
 				BFS(map1,temp_point,dest)
-				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
-				#print obstical map
-				for i in range(ROW):
-					print(*map1[i])
+				map1[int(floor(cos(heading)*dist+tag.x)) + OFFSET][int(floor(sin(heading)*dist+tag.y)) + OFFSET] = 0
+				
 				#print(dist)
 	#print(tag.x)
 	#print(tag.y)
