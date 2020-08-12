@@ -364,7 +364,7 @@ class DisplayInRviz:
 
 		# add the interactive marker to our collection &
 		# tell the server to call processFeedback() when feedback arrives for it
-		server.insert(int_marker, processFeedback)
+		server.insert(int_marker, self.processFeedback)
 
 		
 
