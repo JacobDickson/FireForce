@@ -27,7 +27,7 @@ ROW = 11
 COL = ROW
 
 #Accounting for negative coordinated in the matrix
-OFFSET = floor(row / 2)
+OFFSET = floor(ROW / 2)
 
 path = deque()
 visit = [[None for i in range(COL)] for j in range(ROW)]

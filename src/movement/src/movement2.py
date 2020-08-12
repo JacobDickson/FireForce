@@ -191,6 +191,7 @@ while path:
 				#to include found objects
 				BFS(map1,temp_point,dest)
 				map1[int(floor(cos(heading)*dist+tag.x))][int(floor(sin(heading)*dist+tag.y))] = 0
+				print("OBject Distance is: ")
 				print(dist)
 	print(tag.x)
 	print(tag.y)
